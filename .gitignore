@@ -40,3 +40,16 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
+
+# Java / Maven
+**/target/
+apps/spring-backend/target/
+**/.mvn/
+**/.maven/
+*.class
+*.jar
+*.war
+*.ear
+dependency-reduced-pom.xml
+release.properties
+buildNumber.properties

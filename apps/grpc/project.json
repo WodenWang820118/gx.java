@@ -1,0 +1,48 @@
+{
+  "name": "grpc",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/grpc/src",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn spring-boot:run -Dspring-boot.run.profiles=dev",
+        "cwd": "{workspaceRoot}/apps/grpc"
+      },
+      "configurations": {
+        "development": {
+          "command": "mvn spring-boot:run -Dspring-boot.run.profiles=development",
+          "cwd": "{workspaceRoot}/apps/grpc"
+        },
+        "production": {
+          "command": "mvn spring-boot:run -Dspring-boot.run.profiles=production",
+          "cwd": "{workspaceRoot}/apps/grpc"
+        }
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn spring-boot:build-image",
+        "cwd": "{workspaceRoot}/apps/grpc"
+      },
+      "outputs": ["{projectRoot}/target"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn test",
+        "cwd": "{workspaceRoot}/apps/grpc"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn clean",
+        "cwd": "{workspaceRoot}/apps/grpc"
+      }
+    }
+  },
+  "tags": ["backend", "java", "spring"]
+}
