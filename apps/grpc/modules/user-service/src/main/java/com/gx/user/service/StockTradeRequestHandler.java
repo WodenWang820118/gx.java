@@ -32,7 +32,7 @@ public class StockTradeRequestHandler {
 
         user.setBalance(user.getBalance() - totalPrice);
 
-        this.portfolioItemRepository.findByUserIdAndTicker(request.getUserId(), request.getTicker())
+        this.portfolioItemRepository.findByUserIdAndTicker(request.getUserId(), request.getTicker().name())
                 .ifPresentOrElse(item -> item.setQuantity(item.getQuantity() + request.getQuantity()), () -> {
                     var newItem = this.entityMapper.toPortfolioItem(request);
                     this.portfolioItemRepository.save(newItem);
@@ -46,7 +46,8 @@ public class StockTradeRequestHandler {
         var user = this.userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new UnkownUserException(request.getUserId()));
 
-        var portfolioItem = this.portfolioItemRepository.findByUserIdAndTicker(request.getUserId(), request.getTicker())
+        var portfolioItem = this.portfolioItemRepository
+                .findByUserIdAndTicker(request.getUserId(), request.getTicker().name())
                 .filter(item -> item.getQuantity() >= request.getQuantity())
                 .orElseThrow(() -> new InsufficientBalanceException(user.getId()));
 

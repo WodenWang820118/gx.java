@@ -6,7 +6,7 @@
     "grpc:serve": "nx run grpc:serve",
     "grpc:serve:user": "nx run grpc:serve:user",
     "grpc:serve:aggregator": "nx run grpc:serve:aggregator",
-    "grpc:build": "nx run grpc:build",
+    "grpc:build": "cross-env \"nx run grpc:clean && nx run grpc:build\"",
     "grpc:test": "nx run grpc:test",
     "grpc:clean": "nx run grpc:clean"
   },
