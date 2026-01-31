@@ -3,7 +3,12 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev-grpc": "cross-env NODE_ENV=dev PORT=3000 nx serve grpc"
+    "grpc:serve": "nx run grpc:serve",
+    "grpc:serve:user": "nx run grpc:serve:user",
+    "grpc:serve:aggregator": "nx run grpc:serve:aggregator",
+    "grpc:build": "cross-env \"nx run grpc:clean && nx run grpc:build\"",
+    "grpc:test": "nx run grpc:test",
+    "grpc:clean": "nx run grpc:clean"
   },
   "private": true,
   "devDependencies": {
