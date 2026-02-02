@@ -6,6 +6,8 @@ import com.gx.common.Ticker;
 import com.gx.user.StockTradeRequest;
 import com.gx.user.StockTradeResponse;
 import com.gx.user.exceptions.InsufficientBalanceException;
+import com.gx.user.exceptions.InsufficientHoldingsException;
+import com.gx.user.exceptions.HoldingNotFoundException;
 import com.gx.user.exceptions.UnkownTickerException;
 import com.gx.user.exceptions.UnkownUserException;
 import com.gx.user.repository.PortfolioItemRepository;
@@ -48,8 +50,11 @@ public class StockTradeRequestHandler {
 
         var portfolioItem = this.portfolioItemRepository
                 .findByUserIdAndTicker(request.getUserId(), request.getTicker().name())
-                .filter(item -> item.getQuantity() >= request.getQuantity())
-                .orElseThrow(() -> new InsufficientBalanceException(user.getId()));
+                .orElseThrow(() -> new HoldingNotFoundException(request.getUserId(), request.getTicker().name()));
+
+        if (portfolioItem.getQuantity() < request.getQuantity()) {
+            throw new InsufficientHoldingsException(request.getUserId(), request.getTicker().name());
+        }
 
         var totalPrice = request.getQuantity() * request.getPrice();
         user.setBalance(user.getBalance() + totalPrice);
@@ -58,7 +63,7 @@ public class StockTradeRequestHandler {
     }
 
     private void validateTickerInPortfolio(Ticker ticker) {
-        if (Ticker.UNKNOWN.equals(ticker)) {
+        if (Ticker.UNKNOWN.equals(ticker) || Ticker.UNRECOGNIZED.equals(ticker)) {
             throw new UnkownTickerException(ticker.name());
         }
     }

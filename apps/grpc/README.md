@@ -54,6 +54,9 @@ nx run grpc:build
 # Run all services in parallel (dev profile)
 nx run grpc:serve
 
+# Run all services + start the Envoy gRPC-Web gateway (recommended for the Angular app)
+nx run grpc:serve:all
+
 # Run individual services
 nx run grpc:serve:user          # User service only
 nx run grpc:serve:aggregator    # Aggregator service only

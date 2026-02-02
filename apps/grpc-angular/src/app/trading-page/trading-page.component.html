@@ -27,7 +27,7 @@
 
     <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
       @for (ticker of tickers; track ticker) {
-        <p-card styleClass="h-full">
+        <p-card class="h-full">
           <ng-template pTemplate="header">
             <div class="flex items-center justify-between px-2 py-2">
               <span class="text-sm font-semibold">{{ ticker }}</span>
@@ -40,7 +40,11 @@
 
           <div class="flex flex-col gap-3">
             <div class="text-center text-2xl font-semibold price">
-              ${{ stockPrices()[ticker] ?? 0 }}
+              @if (stockPrices()[ticker]; as price) {
+                ${{ price }}
+              } @else {
+                <span class="text-slate-400">—</span>
+              }
             </div>
 
             <div class="grid grid-cols-2 gap-3">
@@ -52,6 +56,7 @@
               <p-button
                 label="Sell"
                 severity="warn"
+                [disabled]="holdingsByTicker()[ticker] < 1"
                 (onClick)="trade(ticker, 'SELL')"
               ></p-button>
             </div>
@@ -107,7 +112,6 @@
             [value]="user()?.holdings ?? []"
             [paginator]="false"
             [rows]="10"
-            responsiveLayout="scroll"
           >
             <ng-template pTemplate="header">
               <tr>
@@ -124,7 +128,11 @@
                 <td class="font-semibold">{{ holding.ticker }}</td>
                 <td>{{ holding.quantity }}</td>
                 <td>
-                  ${{ holding.quantity * (stockPrices()[holding.ticker] ?? 0) }}
+                  @if (stockPrices()[holding.ticker]; as price) {
+                    ${{ holding.quantity * price }}
+                  } @else {
+                    <span class="text-slate-400">—</span>
+                  }
                 </td>
               </tr>
             </ng-template>

@@ -6,7 +6,7 @@ export interface PriceUpdateDto {
 }
 
 export interface PortfolioHolding {
-  ticker: string;
+  ticker: Ticker;
   quantity: number;
 }
 
@@ -20,7 +20,7 @@ export type TradeAction = 'BUY' | 'SELL';
 
 export interface StockTradeRequest {
   userId: number;
-  ticker: string;
+  ticker: Ticker;
   price: number;
   action: TradeAction;
   quantity: number;

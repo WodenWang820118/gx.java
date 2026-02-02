@@ -15,7 +15,8 @@ This folder contains an Envoy config that fronts:
 
 2) Start Envoy:
 
-- `cd apps/grpc/envoy && docker compose up -d`
+- Via Nx (from repo root): `nx run grpc:envoy:up`
+- Or directly: `cd apps/grpc/envoy && docker compose up -d`
 
 Envoy listens on:
 - `http://localhost:8080` (proxy)

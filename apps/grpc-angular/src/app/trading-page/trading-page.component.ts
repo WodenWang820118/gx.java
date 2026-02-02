@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, switchMap, take } from 'rxjs';
+import { filter, map, scan, switchMap, take } from 'rxjs';
 
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -50,6 +50,8 @@ export class TradingPageComponent implements OnInit {
     'MICROSOFT',
   ];
 
+  private readonly tickerSet = new Set<Ticker>(this.tickers);
+
   readonly userId = signal(1);
   readonly user = signal<UserInformation | null>(null);
 
@@ -63,8 +65,50 @@ export class TradingPageComponent implements OnInit {
 
   readonly connectionStatus = this.updates.status;
 
-  private readonly latestPriceUpdate = toSignal<PriceUpdateDto | null>(
-    this.updates.priceUpdates(),
+  private readonly priceBatch = toSignal<Record<Ticker, number> | null>(
+    this.updates.priceUpdates().pipe(
+      filter(
+        (event): event is PriceUpdateDto =>
+          !!event &&
+          typeof event.ticker === 'string' &&
+          this.tickerSet.has(event.ticker as Ticker) &&
+          Number.isFinite(event.price) &&
+          event.price > 0,
+      ),
+      map((event) => ({ ticker: event.ticker as Ticker, price: event.price })),
+      scan(
+        (state, event) => {
+          const pending: Partial<Record<Ticker, number>> = {
+            ...state.pending,
+            [event.ticker]: event.price,
+          };
+
+          // Only update the UI when we have a fresh price for ALL tickers.
+          const ready = this.tickers.every(
+            (t) => typeof pending[t] === 'number',
+          );
+
+          if (!ready) {
+            return { pending, emit: null };
+          }
+
+          return { pending: {}, emit: pending as Record<Ticker, number> };
+        },
+        {
+          pending: {} as Partial<Record<Ticker, number>>,
+          emit: null as Record<Ticker, number> | null,
+        },
+      ),
+      filter(
+        (
+          state,
+        ): state is {
+          pending: Partial<Record<Ticker, number>>;
+          emit: Record<Ticker, number>;
+        } => state.emit !== null,
+      ),
+      map((state) => state.emit),
+    ),
     { initialValue: null },
   );
 
@@ -78,6 +122,22 @@ export class TradingPageComponent implements OnInit {
     }, 0);
 
     return holdingsValue + (user?.balance ?? 0);
+  });
+
+  readonly holdingsByTicker = computed(() => {
+    const holdings = this.user()?.holdings ?? [];
+    return holdings.reduce<Record<Ticker, number>>(
+      (acc, holding) => {
+        acc[holding.ticker] = holding.quantity;
+        return acc;
+      },
+      {
+        APPLE: 0,
+        AMAZON: 0,
+        GOOGLE: 0,
+        MICROSOFT: 0,
+      },
+    );
   });
 
   constructor() {
@@ -96,13 +156,9 @@ export class TradingPageComponent implements OnInit {
     });
 
     effect(() => {
-      const event = this.latestPriceUpdate();
-      if (!event?.ticker) return;
-
-      this.stockPrices.update((prev) => ({
-        ...prev,
-        [event.ticker]: event.price,
-      }));
+      const batch = this.priceBatch();
+      if (!batch) return;
+      this.stockPrices.update((prev) => ({ ...prev, ...batch }));
     });
   }
 
@@ -138,6 +194,15 @@ export class TradingPageComponent implements OnInit {
   }
 
   trade(ticker: Ticker, action: TradeAction): void {
+    if (action === 'SELL' && (this.holdingsByTicker()[ticker] ?? 0) < 1) {
+      this.showToast(
+        'warn',
+        'Cannot Sell',
+        `You don't own any ${ticker} shares yet.`,
+      );
+      return;
+    }
+
     const knownPrice = this.stockPrices()[ticker];
     const price = typeof knownPrice === 'number' ? Math.round(knownPrice) : 100;
 

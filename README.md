@@ -15,6 +15,15 @@ pnpm run grpc:build    # Build
 pnpm run grpc:serve    # Run all services
 ```
 
+### [gRPC Angular Client](apps/grpc-angular/README.md)
+Angular frontend that consumes the gRPC gateway via Connect-Web endpoints and generated TypeScript clients.
+
+**Quick Start:**
+```bash
+pnpm run grpc-angular:build    # Build
+pnpm run grpc-angular:serve    # Run dev server
+```
+
 ### [Spring Boot Demo](apps/springbootup/README.md)
 Comprehensive Spring Boot 4.0.2 application with REST APIs, JPA/Hibernate, OpenAPI documentation, and Actuator monitoring.
 
@@ -60,6 +69,7 @@ nx affected -t test
 ```
 apps/
   ├── grpc/              # gRPC microservices
+  ├── grpc-angular/      # Angular client for gRPC gateway
   └── springbootup/      # Spring Boot demo
 packages/                # Shared libraries
 ```
