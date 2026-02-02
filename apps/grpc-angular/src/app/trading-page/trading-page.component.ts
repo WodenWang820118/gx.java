@@ -29,6 +29,12 @@ import {
   UserInformation,
 } from '../models/trading.models';
 
+/**
+ * Main trading page component.
+ * Displays user portfolio information, real-time stock prices, and enables buy/sell functionality.
+ * Manages state through Angular signals and reactive streams for a responsive UI.
+ * Implements automatic connection management with visual status indicators.
+ */
 @Component({
   selector: 'app-trading-page',
   imports: [
@@ -43,6 +49,7 @@ import {
   styleUrl: './trading-page.component.css',
 })
 export class TradingPageComponent implements OnInit {
+  /** List of all available stock tickers the user can trade */
   readonly tickers: readonly Ticker[] = [
     'APPLE',
     'AMAZON',
@@ -50,21 +57,31 @@ export class TradingPageComponent implements OnInit {
     'MICROSOFT',
   ];
 
+  /** Set version of tickers for O(1) lookup operations */
   private readonly tickerSet = new Set<Ticker>(this.tickers);
 
+  /** Currently selected user ID (can be changed via URL parameter) */
   readonly userId = signal(1);
+  /** Current user's account information (name, balance, holdings) */
   readonly user = signal<UserInformation | null>(null);
 
+  /** Current stock prices indexed by ticker symbol */
   readonly stockPrices = signal<Record<string, number | undefined>>({});
 
+  /** Tracks the last status to avoid redundant effect triggers */
   private readonly lastStatus = signal<StockStreamStatus | null>(null);
 
+  /** Injected trading API service for backend communication */
   private readonly api = inject(TradingApiService);
+  /** Injected stock updates service for real-time price streaming */
   private readonly updates = inject(StockUpdatesService);
+  /** Injected message service for displaying toast notifications */
   private readonly messageService = inject(MessageService);
 
+  /** Reactive signal for connection status updates */
   readonly connectionStatus = this.updates.status;
 
+  /** Batched price updates (ensures we have prices for all tickers before updating UI) */
   private readonly priceBatch = toSignal<Record<Ticker, number> | null>(
     this.updates.priceUpdates().pipe(
       filter(
@@ -112,6 +129,7 @@ export class TradingPageComponent implements OnInit {
     { initialValue: null },
   );
 
+  /** Computed total portfolio value (cash balance + holdings value at current prices) */
   readonly portfolioValue = computed(() => {
     const user = this.user();
     const prices = this.stockPrices();
@@ -124,6 +142,7 @@ export class TradingPageComponent implements OnInit {
     return holdingsValue + (user?.balance ?? 0);
   });
 
+  /** Computed mapping of holdings by ticker for quick quantity lookups */
   readonly holdingsByTicker = computed(() => {
     const holdings = this.user()?.holdings ?? [];
     return holdings.reduce<Record<Ticker, number>>(
@@ -139,6 +158,10 @@ export class TradingPageComponent implements OnInit {
       },
     );
   });
+  /**
+   * Constructor initializes reactive effects for connection status monitoring and price updates.
+   * Sets up automatic UI updates when connection status changes or price batches arrive.
+   */
 
   constructor() {
     effect(() => {
@@ -158,6 +181,10 @@ export class TradingPageComponent implements OnInit {
     effect(() => {
       const batch = this.priceBatch();
       if (!batch) return;
+      /**
+       * Angular lifecycle hook called after component initialization.
+       * Loads user ID from URL parameters and fetches initial user information.
+       */
       this.stockPrices.update((prev) => ({ ...prev, ...batch }));
     });
   }
@@ -166,6 +193,11 @@ export class TradingPageComponent implements OnInit {
     const params = new URLSearchParams(globalThis?.location?.search ?? '');
     const user = params.get('user');
     this.userId.set(user ? Number(user) : 1);
+    /**
+     * Fetches and updates the current user's information from the API.
+     * Called on component initialization and after successful trades.
+     * Displays error toast if user is not found.
+     */
 
     if (!Number.isFinite(this.userId()) || this.userId() <= 0) {
       this.userId.set(1);
@@ -184,6 +216,13 @@ export class TradingPageComponent implements OnInit {
         },
         error: () => {
           this.user.set(null);
+          /**
+           * Executes a stock trade (buy or sell) for the current user.
+           * Validates trade conditions (e.g., sufficient holdings for sell orders) before execution.
+           * Updates user information and displays confirmation messages on success or error.
+           * @param ticker - The stock ticker to trade
+           * @param action - The trade action (BUY or SELL)
+           */
           this.showToast(
             'error',
             'User Load Failed',
@@ -226,6 +265,14 @@ export class TradingPageComponent implements OnInit {
       .subscribe({
         next: ({ res, user }) => {
           this.user.set(user);
+          /**
+           * Displays a toast notification to the user.
+           * Used for confirmations, warnings, and error messages.
+           * Auto-dismisses after 3 seconds.
+           * @param severity - Severity level of the message (success, info, warn, error)
+           * @param summary - Brief title of the notification
+           * @param detail - Detailed message text
+           */
           this.showToast(
             'success',
             'Trade Submitted',
@@ -236,6 +283,11 @@ export class TradingPageComponent implements OnInit {
           this.showToast('error', 'Trade Failed', getErrorMessage(err));
         },
       });
+    /**
+     * Converts a connection status enum value to a user-friendly display label.
+     * @param status - The connection status
+     * @returns Display label string (LIVE, CONNECTING, RECONNECTING, DISCONNECTED)
+     */
   }
 
   private showToast(
@@ -245,6 +297,11 @@ export class TradingPageComponent implements OnInit {
   ): void {
     this.messageService.add({
       severity,
+      /**
+       * Returns the PrimeNG severity level for displaying connection status with appropriate styling.
+       * @param status - The connection status
+       * @returns Severity value (success, info, warn, danger, secondary) for UI styling
+       */
       summary,
       detail,
       life: 3000,
@@ -282,6 +339,12 @@ export class TradingPageComponent implements OnInit {
   }
 }
 
+/**
+ * Extracts a human-readable error message from various error types.
+ * Handles Error objects, strings, and objects with message properties.
+ * @param err - The error object from which to extract a message
+ * @returns A descriptive error message string for display to the user
+ */
 function getErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
   if (typeof err === 'string') return err;

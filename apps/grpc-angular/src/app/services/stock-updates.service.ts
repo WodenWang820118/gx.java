@@ -11,24 +11,40 @@ import { StockService } from '../../gen/stock-service_pb.js';
 import { Ticker as CommonTicker } from '../../gen/common/common_pb.js';
 import { PriceUpdateDto, Ticker } from '../models/trading.models';
 
+/** Status states of the gRPC streaming connection to the stock service */
 export type StockStreamStatus =
   | 'connecting'
   | 'live'
   | 'reconnecting'
   | 'disconnected';
 
+/**
+ * Service for real-time stock price updates via gRPC streaming.
+ * Maintains connection status and provides continuous price updates for all supported tickers.
+ * Automatically handles reconnection logic with exponential backoff.
+ */
 @Injectable({ providedIn: 'root' })
 export class StockUpdatesService {
+  /** gRPC web transport configured for streaming requests */
   private readonly transport = createGrpcWebTransport({
     // same-origin + dev proxy / Envoy forward
     baseUrl: '',
   });
 
+  /** gRPC client for stock service streaming operations */
   private readonly stockClient = createClient(StockService, this.transport);
 
+  /** Signal tracking the current connection status */
   readonly status = signal<StockStreamStatus>('disconnected');
+  /** Observable version of the status signal for reactive subscriptions */
   readonly status$ = toObservable(this.status);
 
+  /**
+   * Establishes a gRPC server-streaming connection to receive real-time price updates.
+   * Automatically manages connection status and implements exponential backoff retry logic.
+   * Updates are emitted as they arrive from the server.
+   * @returns Observable that emits PriceUpdateDto objects with ticker and price information
+   */
   priceUpdates(): Observable<PriceUpdateDto> {
     return defer(() => {
       this.status.set('connecting');
@@ -94,6 +110,12 @@ export class StockUpdatesService {
 }
 
 // Connect v2: prefer switch for stable typing (avoid enum reverse lookup)
+/**
+ * Converts protobuf Ticker enum value to UI ticker symbol string.
+ * Used for mapping gRPC price updates to displayable ticker symbols.
+ * @param ticker - The protobuf Ticker enum value
+ * @returns The corresponding ticker symbol ('APPLE', 'AMAZON', 'GOOGLE', 'MICROSOFT'), defaults to 'APPLE' if unknown
+ */
 function protoTickerToUiTicker(ticker: CommonTicker): Ticker {
   switch (ticker) {
     case CommonTicker.APPLE:
