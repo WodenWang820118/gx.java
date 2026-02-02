@@ -1,0 +1,46 @@
+{
+  "name": "springbootup",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/springbootup/src",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn spring-boot:run -Dspring-boot.run.profiles=dev -DskipTests",
+        "cwd": "{workspaceRoot}/apps/springbootup"
+      },
+      "configurations": {
+        "development": {
+          "command": "mvn spring-boot:run -Dspring-boot.run.profiles=development -DskipTests"
+        },
+        "production": {
+          "command": "mvn spring-boot:run -Dspring-boot.run.profiles=production -DskipTests"
+        }
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn clean install -DskipTests",
+        "cwd": "{workspaceRoot}/apps/springbootup"
+      },
+      "outputs": ["{projectRoot}/target"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn test",
+        "cwd": "{workspaceRoot}/apps/springbootup"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn clean",
+        "cwd": "{workspaceRoot}/apps/springbootup"
+      }
+    }
+  },
+  "tags": ["backend", "java", "spring", "springboot"]
+}

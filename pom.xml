@@ -16,6 +16,7 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>apps/grpc</module>
+		<module>apps/springbootup</module>
 	</modules>
 	<properties>
 		<java.version>25</java.version>

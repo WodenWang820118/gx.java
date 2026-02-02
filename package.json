@@ -8,7 +8,11 @@
     "grpc:serve:aggregator": "nx run grpc:serve:aggregator",
     "grpc:build": "cross-env \"nx run grpc:clean && nx run grpc:build\"",
     "grpc:test": "nx run grpc:test",
-    "grpc:clean": "nx run grpc:clean"
+    "grpc:clean": "nx run grpc:clean",
+    "springbootup:serve": "nx run springbootup:serve",
+    "springbootup:build": "cross-env \"nx run springbootup:clean && nx run springbootup:build\"",
+    "springbootup:test": "nx run springbootup:test",
+    "springbootup:clean": "nx run springbootup:clean"
   },
   "private": true,
   "devDependencies": {
