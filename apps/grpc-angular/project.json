@@ -9,12 +9,18 @@
     "proto:generate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx buf generate apps/grpc/modules/proto-common/src/main/proto --template apps/grpc-angular/proto/buf.gen.yaml",
+        "command": "pnpm exec buf generate apps/grpc/modules/proto-common/src/main/proto --template apps/grpc-angular/proto/buf.gen.yaml",
         "cwd": "{workspaceRoot}"
       }
     },
     "build": {
       "executor": "@angular/build:application",
+      "dependsOn": [
+        {
+          "target": "proto:generate",
+          "projects": "self"
+        }
+      ],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/grpc-angular",

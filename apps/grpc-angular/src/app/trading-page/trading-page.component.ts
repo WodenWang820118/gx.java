@@ -167,9 +167,8 @@ export class TradingPageComponent implements OnInit {
             res.message ?? `${action} ${ticker}`,
           );
         },
-        error: (err: any) => {
-          const message = err?.message || 'Trade failed.';
-          this.showToast('error', 'Trade Failed', message);
+        error: (err: unknown) => {
+          this.showToast('error', 'Trade Failed', getErrorMessage(err));
         },
       });
   }
@@ -216,4 +215,14 @@ export class TradingPageComponent implements OnInit {
         return 'danger';
     }
   }
+}
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  if (err && typeof err === 'object') {
+    const maybeMessage = (err as Record<string, unknown>)['message'];
+    if (typeof maybeMessage === 'string') return maybeMessage;
+  }
+  return 'Trade failed.';
 }

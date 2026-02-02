@@ -2,14 +2,13 @@ import { Injectable, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, defer, retry, timer } from 'rxjs';
 
-import { createPromiseClient } from '@connectrpc/connect';
+import { createClient } from '@connectrpc/connect';
 import { createGrpcWebTransport } from '@connectrpc/connect-web';
 
-import { Empty } from '@bufbuild/protobuf';
+// Connect v2: service descriptors are exported from *_pb.ts
+import { StockService } from '../../gen/stock-service_pb.js';
 
-import { StockService } from '../../gen/stock-service_connect.js';
 import { Ticker as CommonTicker } from '../../gen/common/common_pb.js';
-
 import { PriceUpdateDto, Ticker } from '../models/trading.models';
 
 export type StockStreamStatus =
@@ -18,15 +17,14 @@ export type StockStreamStatus =
   | 'reconnecting'
   | 'disconnected';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class StockUpdatesService {
-  private readonly transport = createGrpcWebTransport({ baseUrl: '' });
-  private readonly stockClient = createPromiseClient(
-    StockService,
-    this.transport,
-  );
+  private readonly transport = createGrpcWebTransport({
+    // same-origin + dev proxy / Envoy forward
+    baseUrl: '',
+  });
+
+  private readonly stockClient = createClient(StockService, this.transport);
 
   readonly status = signal<StockStreamStatus>('disconnected');
   readonly status$ = toObservable(this.status);
@@ -40,27 +38,18 @@ export class StockUpdatesService {
         let hasEmitted = false;
         let setDisconnectedOnTeardown = true;
 
+        // Connect v2: send an empty request as {}
         const stream = this.stockClient.getPriceUpdates(
-          // google.protobuf.Empty
-          new Empty(),
+          {},
           { signal: abortController.signal },
         );
 
-        const iterator = stream[Symbol.asyncIterator]();
-
-        const pump = (): void => {
-          iterator
-            .next()
-            .then((result) => {
+        const run = async (): Promise<void> => {
+          try {
+            // server-streaming：AsyncIterable，for await...of
+            for await (const update of stream) {
               if (abortController.signal.aborted) return;
 
-              if (result.done) {
-                this.status.set('disconnected');
-                subscriber.complete();
-                return;
-              }
-
-              const update = result.value;
               if (!hasEmitted) {
                 hasEmitted = true;
                 this.status.set('live');
@@ -70,23 +59,27 @@ export class StockUpdatesService {
                 ticker: protoTickerToUiTicker(update.ticker),
                 price: update.price,
               });
+            }
 
-              pump();
-            })
-            .catch((err) => {
-              if (!abortController.signal.aborted) {
-                this.status.set('reconnecting');
-                setDisconnectedOnTeardown = false;
-                subscriber.error(err);
-              }
-            });
+            if (!abortController.signal.aborted) {
+              this.status.set('disconnected');
+              subscriber.complete();
+            }
+          } catch (err) {
+            if (!abortController.signal.aborted) {
+              this.status.set('reconnecting');
+              setDisconnectedOnTeardown = false; // Keep reconnecting; retry will switch back to connecting on re-subscribe
+              subscriber.error(err);
+            }
+          }
         };
 
-        pump();
+        // Fire-and-forget: start the streaming loop without awaiting.
+        // Observable teardown uses AbortController to cancel the stream.
+        void run();
 
         return () => {
           abortController.abort();
-          iterator.return?.();
           if (setDisconnectedOnTeardown) {
             this.status.set('disconnected');
           }
@@ -100,15 +93,18 @@ export class StockUpdatesService {
   }
 }
 
+// Connect v2: prefer switch for stable typing (avoid enum reverse lookup)
 function protoTickerToUiTicker(ticker: CommonTicker): Ticker {
-  const key = CommonTicker[ticker] as string | undefined;
-  if (
-    key === 'APPLE' ||
-    key === 'AMAZON' ||
-    key === 'GOOGLE' ||
-    key === 'MICROSOFT'
-  ) {
-    return key;
+  switch (ticker) {
+    case CommonTicker.APPLE:
+      return 'APPLE';
+    case CommonTicker.AMAZON:
+      return 'AMAZON';
+    case CommonTicker.GOOGLE:
+      return 'GOOGLE';
+    case CommonTicker.MICROSOFT:
+      return 'MICROSOFT';
+    default:
+      return 'APPLE';
   }
-  return 'APPLE';
 }

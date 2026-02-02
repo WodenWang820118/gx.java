@@ -5,7 +5,4 @@ plugins:
     out: apps/grpc-angular/src/gen
     opt:
       - target=ts
-  - local: protoc-gen-connect-es
-    out: apps/grpc-angular/src/gen
-    opt:
-      - target=ts
+      - ts_nocheck=false

@@ -1,16 +1,18 @@
 import { Injectable } from '@angular/core';
 import { Observable, defer, from, map } from 'rxjs';
 
-import { createPromiseClient } from '@connectrpc/connect';
+import { create } from '@bufbuild/protobuf';
+import { createClient } from '@connectrpc/connect';
 import { createGrpcWebTransport } from '@connectrpc/connect-web';
 
 import { Ticker as CommonTicker } from '../../gen/common/common_pb.js';
 import {
-  StockTradeRequest as ProtoStockTradeRequest,
+  Holding,
+  StockTradeRequestSchema,
   TradeAction as UserTradeAction,
-  UserInformationRequest,
+  UserInformationRequestSchema,
+  UserService,
 } from '../../gen/user-service_pb.js';
-import { UserService } from '../../gen/user-service_connect.js';
 
 import {
   StockTradeRequest,
@@ -30,23 +32,20 @@ export class TradingApiService {
     baseUrl: '',
   });
 
-  private readonly userClient = createPromiseClient(
-    UserService,
-    this.transport,
-  );
+  private readonly userClient = createClient(UserService, this.transport);
 
   getUserInformation(userId: number): Observable<UserInformation> {
     return defer(() =>
       from(
         this.userClient.getUserInformation(
-          new UserInformationRequest({ userId }),
+          create(UserInformationRequestSchema, { userId }),
         ),
       ),
     ).pipe(
       map((user) => ({
         name: user.name,
         balance: user.balance,
-        holdings: (user.holdings ?? []).map((h: any) => ({
+        holdings: user.holdings.map((h: Holding) => ({
           ticker: protoTickerToUiTicker(h.ticker),
           quantity: h.quantity,
         })),
@@ -58,7 +57,7 @@ export class TradingApiService {
     return defer(() =>
       from(
         this.userClient.tradeStock(
-          new ProtoStockTradeRequest({
+          create(StockTradeRequestSchema, {
             userId: request.userId,
             ticker: uiTickerToProtoTicker(request.ticker),
             action: uiTradeActionToProtoTradeAction(request.action),
