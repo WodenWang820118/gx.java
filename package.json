@@ -3,19 +3,22 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "grpc:serve": "nx run grpc:serve",
-    "grpc:serve:all": "nx run grpc:serve",
     "grpc:serve:user": "nx run grpc:serve:user",
     "grpc:serve:aggregator": "nx run grpc:serve:aggregator",
     "grpc:serve:stock": "nx run grpc:serve:stock",
-    "grcp:serve:all": "nx run grpc:serve",
+    "grpc:serve:envoy": "nx run grpc:envoy:up",
+    "grpc:serve:all": "nx run grpc:serve:all",
     "grpc:build": "cross-env \"nx run grpc:clean && nx run grpc:build\"",
     "grpc:test": "nx run grpc:test",
     "grpc:clean": "nx run grpc:clean",
     "springbootup:serve": "nx run springbootup:serve",
     "springbootup:build": "cross-env \"nx run springbootup:clean && nx run springbootup:build\"",
     "springbootup:test": "nx run springbootup:test",
-    "springbootup:clean": "nx run springbootup:clean"
+    "springbootup:clean": "nx run springbootup:clean",
+    "grpc-angular:serve": "nx run grpc-angular:serve",
+    "grpc-angular:serve-static": "nx run grpc-angular:serve-static",
+    "grpc-angular:build": "nx run grpc-angular:build",
+    "grpc-angular:test": "nx run grpc-angular:test"
   },
   "private": true,
   "devDependencies": {
@@ -25,6 +28,8 @@
     "@angular/cli": "~21.1.0",
     "@angular/compiler-cli": "~21.1.0",
     "@angular/language-service": "~21.1.0",
+    "@bufbuild/buf": "^1.64.0",
+    "@bufbuild/protoc-gen-es": "^2.11.0",
     "@eslint/js": "^9.8.0",
     "@nx/angular": "22.4.4",
     "@nx/devkit": "22.4.4",
@@ -53,13 +58,28 @@
     "vitest": "^4.0.8"
   },
   "dependencies": {
+    "@angular/animations": "~21.1.2",
     "@angular/common": "~21.1.0",
     "@angular/compiler": "~21.1.0",
     "@angular/core": "~21.1.0",
     "@angular/forms": "~21.1.0",
     "@angular/platform-browser": "~21.1.0",
     "@angular/router": "~21.1.0",
+    "@bufbuild/protobuf": "^2.11.0",
+    "@connectrpc/connect": "^2.1.1",
+    "@connectrpc/connect-web": "^2.1.1",
+    "@primeuix/themes": "^2.0.3",
+    "@tailwindcss/postcss": "^4.1.18",
     "cross-env": "^10.1.0",
-    "rxjs": "~7.8.0"
-  }
+    "postcss": "^8.5.6",
+    "primeicons": "^7.0.0",
+    "primeng": "^21.1.1",
+    "rxjs": "~7.8.0",
+    "tailwindcss": "^4.1.18",
+    "tailwindcss-primeui": "^0.6.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@10.22.0"
 }

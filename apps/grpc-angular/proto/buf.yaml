@@ -1,0 +1,3 @@
+version: v2
+
+# Intentionally empty module. We run `buf generate` against the proto-common module.

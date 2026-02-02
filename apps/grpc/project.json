@@ -4,6 +4,34 @@
   "projectType": "application",
   "sourceRoot": "apps/grpc/src",
   "targets": {
+    "envoy:up": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose -f envoy/docker-compose.yml up -d",
+        "cwd": "{workspaceRoot}/apps/grpc"
+      }
+    },
+    "envoy:down": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose -f envoy/docker-compose.yml down",
+        "cwd": "{workspaceRoot}/apps/grpc"
+      }
+    },
+    "envoy:logs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose -f envoy/docker-compose.yml logs -f --tail=200",
+        "cwd": "{workspaceRoot}/apps/grpc"
+      }
+    },
+    "serve:all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run grpc:envoy:up && nx run grpc:serve",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "serve": {
       "executor": "nx:run-commands",
       "options": {

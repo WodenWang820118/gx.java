@@ -6,29 +6,42 @@
   "sourceRoot": "apps/grpc-angular/src",
   "tags": [],
   "targets": {
+    "proto:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec buf generate apps/grpc/modules/proto-common/src/main/proto --template apps/grpc-angular/proto/buf.gen.yaml",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "build": {
       "executor": "@angular/build:application",
+      "dependsOn": [
+        {
+          "target": "proto:generate",
+          "projects": "self"
+        }
+      ],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/grpc-angular",
         "browser": "apps/grpc-angular/src/main.ts",
         "tsConfig": "apps/grpc-angular/tsconfig.app.json",
-        "inlineStyleLanguage": "scss",
+        "inlineStyleLanguage": "css",
         "assets": [
           {
             "glob": "**/*",
             "input": "apps/grpc-angular/public"
           }
         ],
-        "styles": ["apps/grpc-angular/src/styles.scss"]
+        "styles": ["apps/grpc-angular/src/styles.css"]
       },
       "configurations": {
         "production": {
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "500kb",
-              "maximumError": "1mb"
+              "maximumWarning": "1.5mb",
+              "maximumError": "2mb"
             },
             {
               "type": "anyComponentStyle",
@@ -49,6 +62,9 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "options": {
+        "proxyConfig": "apps/grpc-angular/proxy.conf.json"
+      },
       "configurations": {
         "production": {
           "buildTarget": "grpc-angular:build:production"

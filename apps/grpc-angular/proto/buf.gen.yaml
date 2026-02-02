@@ -1,0 +1,8 @@
+version: v2
+
+plugins:
+  - local: protoc-gen-es
+    out: apps/grpc-angular/src/gen
+    opt:
+      - target=ts
+      - ts_nocheck=false

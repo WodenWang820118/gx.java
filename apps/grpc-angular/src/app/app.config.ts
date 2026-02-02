@@ -2,9 +2,33 @@ import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { appRoutes } from './app.routes';
+import { provideHttpClient } from '@angular/common/http';
 
+import { providePrimeNG } from 'primeng/config';
+import { MessageService } from 'primeng/api';
+import Aura from '@primeuix/themes/aura';
+
+/**
+ * Global application configuration.
+ * Configures core services including HTTP client, error handling, UI component library (PrimeNG),
+ * and messaging service for displaying notifications to users.
+ */
 export const appConfig: ApplicationConfig = {
-  providers: [provideBrowserGlobalErrorListeners(), provideRouter(appRoutes)],
+  providers: [
+    /** Enables global error event listeners for uncaught errors */
+    provideBrowserGlobalErrorListeners(),
+    /** Provides HTTP client for making API requests */
+    provideHttpClient(),
+    /** Configures PrimeNG UI component library with Aura theme */
+    providePrimeNG({
+      theme: {
+        preset: Aura,
+        options: {
+          darkModeSelector: '.app-dark',
+        },
+      },
+    }),
+    /** Service for displaying toast notifications and messages */
+    MessageService,
+  ],
 };

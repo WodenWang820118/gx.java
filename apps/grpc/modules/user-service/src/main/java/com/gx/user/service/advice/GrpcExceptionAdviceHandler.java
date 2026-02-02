@@ -1,8 +1,11 @@
 package com.gx.user.service.advice;
 
 import org.springframework.stereotype.Component;
+import org.springframework.grpc.server.GlobalServerInterceptor;
 
 import com.gx.user.exceptions.InsufficientBalanceException;
+import com.gx.user.exceptions.InsufficientHoldingsException;
+import com.gx.user.exceptions.HoldingNotFoundException;
 import com.gx.user.exceptions.UnkownTickerException;
 import com.gx.user.exceptions.UnkownUserException;
 
@@ -14,6 +17,7 @@ import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 
 @Component
+@GlobalServerInterceptor
 public class GrpcExceptionAdviceHandler implements ServerInterceptor {
 
     @Override
@@ -60,6 +64,10 @@ public class GrpcExceptionAdviceHandler implements ServerInterceptor {
             status = Status.NOT_FOUND.withDescription(ex.getMessage());
         } else if (ex instanceof UnkownTickerException) {
             status = Status.NOT_FOUND.withDescription(ex.getMessage());
+        } else if (ex instanceof HoldingNotFoundException) {
+            status = Status.NOT_FOUND.withDescription(ex.getMessage());
+        } else if (ex instanceof InsufficientHoldingsException) {
+            status = Status.FAILED_PRECONDITION.withDescription(ex.getMessage());
         } else if (ex instanceof InsufficientBalanceException) {
             status = Status.FAILED_PRECONDITION.withDescription(ex.getMessage());
         } else {
