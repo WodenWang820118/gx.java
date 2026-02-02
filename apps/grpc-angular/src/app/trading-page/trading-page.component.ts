@@ -28,12 +28,14 @@ import {
   TradeAction,
   UserInformation,
 } from '../models/trading.models';
+import { ThemeToggleComponent } from '../components/theme-toggle.component';
 
 /**
  * Main trading page component.
  * Displays user portfolio information, real-time stock prices, and enables buy/sell functionality.
  * Manages state through Angular signals and reactive streams for a responsive UI.
  * Implements automatic connection management with visual status indicators.
+ * Includes theme toggle for dark/light mode switching.
  */
 @Component({
   selector: 'app-trading-page',
@@ -44,6 +46,7 @@ import {
     TableModule,
     TagModule,
     ToastModule,
+    ThemeToggleComponent,
   ],
   templateUrl: './trading-page.component.html',
   styleUrl: './trading-page.component.css',

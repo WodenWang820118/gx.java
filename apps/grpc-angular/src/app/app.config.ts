@@ -23,6 +23,9 @@ export const appConfig: ApplicationConfig = {
     providePrimeNG({
       theme: {
         preset: Aura,
+        options: {
+          darkModeSelector: '.app-dark',
+        },
       },
     }),
     /** Service for displaying toast notifications and messages */

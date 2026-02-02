@@ -1,12 +1,14 @@
 <p-toast position="bottom-left"></p-toast>
 
-<div class="min-h-screen bg-slate-50 text-slate-900">
+<div
+  class="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50"
+>
   <div class="mx-auto max-w-6xl px-4 py-6">
     <div class="flex items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-semibold tracking-tight">Trading Platform</h1>
         <p
-          class="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600"
+          class="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-400"
         >
           <span>User {{ userId() }}</span>
           <span aria-hidden="true">·</span>
@@ -17,12 +19,15 @@
           ></p-tag>
         </p>
       </div>
-      <p-button
-        label="Refresh"
-        icon="pi pi-refresh"
-        severity="secondary"
-        (onClick)="refreshUser()"
-      ></p-button>
+      <div class="flex items-center gap-3">
+        <app-theme-toggle></app-theme-toggle>
+        <p-button
+          label="Refresh"
+          icon="pi pi-refresh"
+          severity="secondary"
+          (onClick)="refreshUser()"
+        ></p-button>
+      </div>
     </div>
 
     <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -43,7 +48,7 @@
               @if (stockPrices()[ticker]; as price) {
                 ${{ price }}
               } @else {
-                <span class="text-slate-400">—</span>
+                <span class="text-slate-400 dark:text-slate-600">—</span>
               }
             </div>
 
@@ -74,7 +79,7 @@
 
           <div class="flex flex-col items-center gap-3 py-2">
             <div
-              class="h-20 w-20 rounded-full bg-slate-200"
+              class="h-20 w-20 rounded-full bg-slate-200 dark:bg-slate-700"
               aria-hidden="true"
             ></div>
             <div class="text-lg font-semibold">
@@ -84,16 +89,22 @@
 
           <div class="mt-4 space-y-3 text-sm">
             <div class="flex items-center justify-between">
-              <span class="text-slate-600">Available Balance</span>
+              <span class="text-slate-600 dark:text-slate-400"
+                >Available Balance</span
+              >
               <span class="font-semibold">${{ user()?.balance ?? 0 }}</span>
             </div>
 
             <div class="flex items-center justify-between">
-              <span class="text-slate-600">Portfolio Value</span>
+              <span class="text-slate-600 dark:text-slate-400"
+                >Portfolio Value</span
+              >
               <span
                 class="font-semibold"
                 [class.text-green-600]="portfolioValue() >= 10000"
                 [class.text-red-600]="portfolioValue() < 10000"
+                [class.dark:text-green-400]="portfolioValue() >= 10000"
+                [class.dark:text-red-400]="portfolioValue() < 10000"
               >
                 ${{ portfolioValue() }}
               </span>
@@ -131,7 +142,7 @@
                   @if (stockPrices()[holding.ticker]; as price) {
                     ${{ holding.quantity * price }}
                   } @else {
-                    <span class="text-slate-400">—</span>
+                    <span class="text-slate-400 dark:text-slate-600">—</span>
                   }
                 </td>
               </tr>

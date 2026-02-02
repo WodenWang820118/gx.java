@@ -1,3 +1,26 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
 @import "primeicons/primeicons.css";
+@plugin "tailwindcss-primeui";
+
+/* Configure Tailwind v4 dark mode to use .app-dark class selector */
+@variant dark (.app-dark &);
+
+/* Apply base dark mode styles */
+:root {
+  color-scheme: light;
+}
+
+:root.app-dark {
+  color-scheme: dark;
+}
+
+/* Smooth theme transition */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Hint browsers about color scheme when dark mode is active */
+.app-dark {
+  color-scheme: dark;
+}
