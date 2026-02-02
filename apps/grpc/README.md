@@ -8,6 +8,7 @@ This application consists of multiple microservices that communicate via gRPC:
 
 - **proto-common**: Shared protobuf definitions for service contracts
 - **user-service**: Backend service providing user management via gRPC (port 9092)
+- **stock-service**: Backend service providing stock prices via gRPC (port 9091)
 - **aggregator-service**: API gateway that exposes REST endpoints and communicates with backend services via gRPC clients (port 3001)
 
 ## 🏗️ Architecture
@@ -23,22 +24,24 @@ This application consists of multiple microservices that communicate via gRPC:
 │  - REST API         │
 │  - gRPC Client      │
 └──────────┬──────────┘
-           │ gRPC
-           ▼
-┌─────────────────────┐
-│   User Service      │ (Port 9092 - gRPC)
-│  - gRPC Server      │ (Port 9090 - HTTP)
-│  - H2 Database      │
-└─────────────────────┘
+         │ gRPC
+     ┌─────┴───────────┐
+     ▼                 ▼
+┌─────────────────────┐   ┌─────────────────────┐
+│   User Service      │   │   Stock Service     │
+│ (Port 9092 - gRPC)  │   │ (Port 9091 - gRPC)  │
+│ (Port 9090 - HTTP)  │   │ (Port 9093 - HTTP)  │
+│  - H2 Database      │   │  - Streaming prices │
+└─────────────────────┘   └─────────────────────┘
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Java 17 or higher
+- Java 25 or higher
 - Maven 3.9+ (or use the included `build-and-run.sh` script)
-- Port 3001, 9090, and 9092 available
+- Port 3001, 9090, 9091, 9092, and 9093 available
 
 ### Using Nx (Recommended)
 
@@ -72,6 +75,9 @@ mvn clean install -DskipTests
 
 # Run user-service
 mvn spring-boot:run -pl modules/user-service -Dspring-boot.run.profiles=dev
+
+# Run stock-service (in separate terminal)
+mvn spring-boot:run -pl modules/stock-service -Dspring-boot.run.profiles=dev
 
 # Run aggregator-service (in separate terminal)
 mvn spring-boot:run -pl modules/aggregator-service -Dspring-boot.run.profiles=dev
@@ -117,6 +123,18 @@ Backend microservice providing user management functionality via gRPC.
 - Username: `sa`
 - Password: *(empty)*
 
+### stock-service
+
+Backend microservice providing stock price functionality via gRPC.
+
+**Ports**:
+- `9093` - HTTP (Health checks)
+- `9091` - gRPC Server
+
+**Features**:
+- Unary API for current stock price
+- Server streaming API for real-time price updates
+
 ### aggregator-service
 
 API Gateway that exposes REST endpoints and aggregates data from backend services using gRPC clients.
@@ -131,6 +149,7 @@ API Gateway that exposes REST endpoints and aggregates data from backend service
 
 **gRPC Client Configuration**:
 - Target: `localhost:9092` (user-service)
+- Target: `localhost:9091` (stock-service)
 - Keep-alive: 30s
 - Idle timeout: 5m
 - Max inbound message size: 4MB
@@ -177,7 +196,7 @@ After modifying `.proto` files:
 mvn clean install -pl modules/proto-common
 
 # Then rebuild dependent services
-mvn clean install -pl modules/user-service,modules/aggregator-service
+mvn clean install -pl modules/user-service,modules/stock-service,modules/aggregator-service
 ```
 
 ## 📊 Monitoring & Debugging
@@ -193,12 +212,14 @@ Access the user-service database:
 ### Health Checks
 
 - User Service: http://localhost:9090/actuator/health
+- Stock Service: http://localhost:9093/actuator/health
 - Aggregator Service: http://localhost:3001/actuator/health
 
 ### Logging
 
 Both services use colored console logging with service name prefixes:
 - 🔵 USER-SERVICE
+- 🟠 STOCK-SERVICE
 - 🟢 AGGREGATOR-SERVICE
 
 Log levels can be adjusted in `application-dev.properties`.
@@ -219,6 +240,7 @@ Key technologies used:
 
 - All services must be running for the aggregator to work properly
 - The aggregator service depends on user-service being available at `localhost:9092`
+- The aggregator service depends on stock-service being available at `localhost:9091`
 - gRPC communication uses plaintext (no TLS) in development mode
 - The build includes automatic protobuf compilation via Maven plugins
 

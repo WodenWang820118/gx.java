@@ -8,6 +8,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
+          "mvn spring-boot:run -pl modules/stock-service -Dspring-boot.run.profiles=dev -DskipTests",
           "mvn spring-boot:run -pl modules/user-service -Dspring-boot.run.profiles=dev -DskipTests",
           "mvn spring-boot:run -pl modules/aggregator-service -Dspring-boot.run.profiles=dev -DskipTests"
         ],
@@ -17,12 +18,14 @@
       "configurations": {
         "development": {
           "commands": [
+            "mvn spring-boot:run -pl modules/stock-service -Dspring-boot.run.profiles=development -DskipTests",
             "mvn spring-boot:run -pl modules/user-service -Dspring-boot.run.profiles=development -DskipTests",
             "mvn spring-boot:run -pl modules/aggregator-service -Dspring-boot.run.profiles=development -DskipTests"
           ]
         },
         "production": {
           "commands": [
+            "mvn spring-boot:run -pl modules/stock-service -Dspring-boot.run.profiles=production -DskipTests",
             "mvn spring-boot:run -pl modules/user-service -Dspring-boot.run.profiles=production -DskipTests",
             "mvn spring-boot:run -pl modules/aggregator-service -Dspring-boot.run.profiles=production -DskipTests"
           ]
@@ -40,6 +43,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "mvn spring-boot:run -pl modules/aggregator-service -Dspring-boot.run.profiles=dev -DskipTests",
+        "cwd": "{workspaceRoot}/apps/grpc"
+      }
+    },
+    "serve:stock": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn spring-boot:run -pl modules/stock-service -Dspring-boot.run.profiles=dev -DskipTests",
         "cwd": "{workspaceRoot}/apps/grpc"
       }
     },
