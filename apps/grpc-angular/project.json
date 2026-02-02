@@ -13,14 +13,14 @@
         "outputPath": "dist/apps/grpc-angular",
         "browser": "apps/grpc-angular/src/main.ts",
         "tsConfig": "apps/grpc-angular/tsconfig.app.json",
-        "inlineStyleLanguage": "scss",
+        "inlineStyleLanguage": "css",
         "assets": [
           {
             "glob": "**/*",
             "input": "apps/grpc-angular/public"
           }
         ],
-        "styles": ["apps/grpc-angular/src/styles.scss"]
+        "styles": ["apps/grpc-angular/src/styles.css"]
       },
       "configurations": {
         "production": {
