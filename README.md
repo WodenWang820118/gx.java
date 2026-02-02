@@ -1,90 +1,71 @@
-# Guan
+# Guan - Java Workspace
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+A Java workspace powered by Nx and Maven, containing Spring Boot applications and microservices projects.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/js?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+## Projects
 
-## Finish your CI setup
+### [gRPC Microservices](apps/grpc/README.md)
+Spring Boot microservices demonstrating gRPC communication with REST API gateway. Includes user-service, aggregator-service, and shared proto definitions.
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/sgXZ0IeuPx)
-
-
-## Generate a library
-
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
+**Quick Start:**
+```bash
+pnpm run grpc:build    # Build
+pnpm run grpc:serve    # Run all services
 ```
 
-## Run tasks
+### [Spring Boot Demo](apps/springbootup/README.md)
+Comprehensive Spring Boot 4.0.2 application with REST APIs, JPA/Hibernate, OpenAPI documentation, and Actuator monitoring.
 
-To build the library use:
-
-```sh
-npx nx build pkg1
+**Quick Start:**
+```bash
+pnpm run springbootup:build    # Build
+pnpm run springbootup:serve    # Run application
 ```
 
-To run any task with Nx use:
+## Getting Started
 
-```sh
-npx nx <target> <project-name>
+**Prerequisites:** Java 25+, Maven 3.9+, Node.js 18+, pnpm
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build all projects
+nx run-many -t build
+
+# Run specific project
+nx run <project-name>:serve
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+## Common Commands
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+# Build, test, clean
+nx run <project>:build
+nx run <project>:test
+nx run <project>:clean
 
-## Versioning and releasing
+# View project graph
+npx nx graph
 
-To version and release the library use
-
-```
-npx nx release
-```
-
-Pass `--dry-run` to see what would happen without actually releasing the library.
-
-[Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Keep TypeScript project references up to date
-
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
-
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
-
-```sh
-npx nx sync
+# Run affected projects
+nx affected -t build
+nx affected -t test
 ```
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+## Workspace Structure
 
-```sh
-npx nx sync:check
+```
+apps/
+  ├── grpc/              # gRPC microservices
+  └── springbootup/      # Spring Boot demo
+packages/                # Shared libraries
 ```
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+Visit each project's README for detailed documentation, architecture, and specific instructions.
 
+---
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/js?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+**Tech Stack:** Java 25 • Spring Boot 4.0.2 • gRPC • Maven • Nx
