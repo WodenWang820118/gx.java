@@ -7,27 +7,49 @@
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "mvn spring-boot:run -Dspring-boot.run.profiles=dev",
-        "cwd": "{workspaceRoot}/apps/grpc"
+        "commands": [
+          "mvn spring-boot:run -pl modules/user-service -Dspring-boot.run.profiles=dev -DskipTests",
+          "mvn spring-boot:run -pl modules/aggregator-service -Dspring-boot.run.profiles=dev -DskipTests"
+        ],
+        "cwd": "{workspaceRoot}/apps/grpc",
+        "parallel": true
       },
       "configurations": {
         "development": {
-          "command": "mvn spring-boot:run -Dspring-boot.run.profiles=development",
-          "cwd": "{workspaceRoot}/apps/grpc"
+          "commands": [
+            "mvn spring-boot:run -pl modules/user-service -Dspring-boot.run.profiles=development -DskipTests",
+            "mvn spring-boot:run -pl modules/aggregator-service -Dspring-boot.run.profiles=development -DskipTests"
+          ]
         },
         "production": {
-          "command": "mvn spring-boot:run -Dspring-boot.run.profiles=production",
-          "cwd": "{workspaceRoot}/apps/grpc"
+          "commands": [
+            "mvn spring-boot:run -pl modules/user-service -Dspring-boot.run.profiles=production -DskipTests",
+            "mvn spring-boot:run -pl modules/aggregator-service -Dspring-boot.run.profiles=production -DskipTests"
+          ]
         }
+      }
+    },
+    "serve:user": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn spring-boot:run -pl modules/user-service -Dspring-boot.run.profiles=dev -DskipTests",
+        "cwd": "{workspaceRoot}/apps/grpc"
+      }
+    },
+    "serve:aggregator": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn spring-boot:run -pl modules/aggregator-service -Dspring-boot.run.profiles=dev -DskipTests",
+        "cwd": "{workspaceRoot}/apps/grpc"
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "mvn spring-boot:build-image",
+        "command": "mvn clean install -DskipTests",
         "cwd": "{workspaceRoot}/apps/grpc"
       },
-      "outputs": ["{projectRoot}/target"]
+      "outputs": ["{projectRoot}/modules/*/target"]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -44,5 +66,5 @@
       }
     }
   },
-  "tags": ["backend", "java", "spring"]
+  "tags": ["backend", "java", "spring", "grpc", "microservices"]
 }
