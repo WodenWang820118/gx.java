@@ -1,0 +1,219 @@
+import { CommonModule } from '@angular/common';
+import {
+  Component,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map, switchMap, take } from 'rxjs';
+
+import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
+
+import {
+  StockStreamStatus,
+  StockUpdatesService,
+} from '../services/stock-updates.service';
+import { TradingApiService } from '../services/trading-api.service';
+import {
+  PriceUpdateDto,
+  Ticker,
+  TradeAction,
+  UserInformation,
+} from '../models/trading.models';
+
+@Component({
+  selector: 'app-trading-page',
+  imports: [
+    CommonModule,
+    ButtonModule,
+    CardModule,
+    TableModule,
+    TagModule,
+    ToastModule,
+  ],
+  templateUrl: './trading-page.component.html',
+  styleUrl: './trading-page.component.css',
+})
+export class TradingPageComponent implements OnInit {
+  readonly tickers: readonly Ticker[] = [
+    'APPLE',
+    'AMAZON',
+    'GOOGLE',
+    'MICROSOFT',
+  ];
+
+  readonly userId = signal(1);
+  readonly user = signal<UserInformation | null>(null);
+
+  readonly stockPrices = signal<Record<string, number | undefined>>({});
+
+  private readonly lastStatus = signal<StockStreamStatus | null>(null);
+
+  private readonly api = inject(TradingApiService);
+  private readonly updates = inject(StockUpdatesService);
+  private readonly messageService = inject(MessageService);
+
+  readonly connectionStatus = this.updates.status;
+
+  private readonly latestPriceUpdate = toSignal<PriceUpdateDto | null>(
+    this.updates.priceUpdates(),
+    { initialValue: null },
+  );
+
+  readonly portfolioValue = computed(() => {
+    const user = this.user();
+    const prices = this.stockPrices();
+
+    const holdingsValue = (user?.holdings ?? []).reduce((sum, holding) => {
+      const price = prices[holding.ticker] ?? 0;
+      return sum + holding.quantity * price;
+    }, 0);
+
+    return holdingsValue + (user?.balance ?? 0);
+  });
+
+  constructor() {
+    effect(() => {
+      const status = this.connectionStatus();
+      if (status === this.lastStatus()) return;
+      this.lastStatus.set(status);
+
+      if (status === 'reconnecting') {
+        this.showToast(
+          'warn',
+          'Reconnecting',
+          'Lost live stock updates; attempting to reconnect...',
+        );
+      }
+    });
+
+    effect(() => {
+      const event = this.latestPriceUpdate();
+      if (!event?.ticker) return;
+
+      this.stockPrices.update((prev) => ({
+        ...prev,
+        [event.ticker]: event.price,
+      }));
+    });
+  }
+
+  ngOnInit(): void {
+    const params = new URLSearchParams(globalThis?.location?.search ?? '');
+    const user = params.get('user');
+    this.userId.set(user ? Number(user) : 1);
+
+    if (!Number.isFinite(this.userId()) || this.userId() <= 0) {
+      this.userId.set(1);
+    }
+
+    this.refreshUser();
+  }
+
+  refreshUser(): void {
+    this.api
+      .getUserInformation(this.userId())
+      .pipe(take(1))
+      .subscribe({
+        next: (user) => {
+          this.user.set(user);
+        },
+        error: () => {
+          this.user.set(null);
+          this.showToast(
+            'error',
+            'User Load Failed',
+            `User ${this.userId()} not found or server error.`,
+          );
+        },
+      });
+  }
+
+  trade(ticker: Ticker, action: TradeAction): void {
+    const knownPrice = this.stockPrices()[ticker];
+    const price = typeof knownPrice === 'number' ? Math.round(knownPrice) : 100;
+
+    this.api
+      .trade({
+        userId: this.userId(),
+        ticker,
+        price,
+        action,
+        quantity: 1,
+      })
+      .pipe(
+        take(1),
+        switchMap((res) =>
+          this.api.getUserInformation(this.userId()).pipe(
+            take(1),
+            map((user) => ({ res, user })),
+          ),
+        ),
+      )
+      .subscribe({
+        next: ({ res, user }) => {
+          this.user.set(user);
+          this.showToast(
+            'success',
+            'Trade Submitted',
+            res.message ?? `${action} ${ticker}`,
+          );
+        },
+        error: (err: any) => {
+          const message = err?.message || 'Trade failed.';
+          this.showToast('error', 'Trade Failed', message);
+        },
+      });
+  }
+
+  private showToast(
+    severity: 'success' | 'info' | 'warn' | 'error',
+    summary: string,
+    detail: string,
+  ): void {
+    this.messageService.add({
+      severity,
+      summary,
+      detail,
+      life: 3000,
+    });
+  }
+
+  statusLabel(status: StockStreamStatus): string {
+    switch (status) {
+      case 'live':
+        return 'LIVE';
+      case 'connecting':
+        return 'CONNECTING';
+      case 'reconnecting':
+        return 'RECONNECTING';
+      case 'disconnected':
+      default:
+        return 'DISCONNECTED';
+    }
+  }
+
+  statusSeverity(
+    status: StockStreamStatus,
+  ): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    switch (status) {
+      case 'live':
+        return 'success';
+      case 'connecting':
+        return 'info';
+      case 'reconnecting':
+        return 'warn';
+      case 'disconnected':
+      default:
+        return 'danger';
+    }
+  }
+}

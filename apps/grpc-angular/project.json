@@ -6,6 +6,13 @@
   "sourceRoot": "apps/grpc-angular/src",
   "tags": [],
   "targets": {
+    "proto:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx buf generate apps/grpc/modules/proto-common/src/main/proto --template apps/grpc-angular/proto/buf.gen.yaml",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "build": {
       "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
@@ -27,8 +34,8 @@
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "500kb",
-              "maximumError": "1mb"
+              "maximumWarning": "1.5mb",
+              "maximumError": "2mb"
             },
             {
               "type": "anyComponentStyle",
@@ -49,6 +56,9 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "options": {
+        "proxyConfig": "apps/grpc-angular/proxy.conf.json"
+      },
       "configurations": {
         "production": {
           "buildTarget": "grpc-angular:build:production"

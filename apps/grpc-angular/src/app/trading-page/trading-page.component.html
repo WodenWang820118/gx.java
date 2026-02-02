@@ -1,0 +1,136 @@
+<p-toast position="bottom-left"></p-toast>
+
+<div class="min-h-screen bg-slate-50 text-slate-900">
+  <div class="mx-auto max-w-6xl px-4 py-6">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight">Trading Platform</h1>
+        <p
+          class="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600"
+        >
+          <span>User {{ userId() }}</span>
+          <span aria-hidden="true">·</span>
+          <span>Prices via gRPC stream</span>
+          <p-tag
+            [value]="statusLabel(connectionStatus())"
+            [severity]="statusSeverity(connectionStatus())"
+          ></p-tag>
+        </p>
+      </div>
+      <p-button
+        label="Refresh"
+        icon="pi pi-refresh"
+        severity="secondary"
+        (onClick)="refreshUser()"
+      ></p-button>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+      @for (ticker of tickers; track ticker) {
+        <p-card styleClass="h-full">
+          <ng-template pTemplate="header">
+            <div class="flex items-center justify-between px-2 py-2">
+              <span class="text-sm font-semibold">{{ ticker }}</span>
+              <p-tag
+                [value]="statusLabel(connectionStatus())"
+                [severity]="statusSeverity(connectionStatus())"
+              ></p-tag>
+            </div>
+          </ng-template>
+
+          <div class="flex flex-col gap-3">
+            <div class="text-center text-2xl font-semibold price">
+              ${{ stockPrices()[ticker] ?? 0 }}
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <p-button
+                label="Buy"
+                severity="success"
+                (onClick)="trade(ticker, 'BUY')"
+              ></p-button>
+              <p-button
+                label="Sell"
+                severity="warn"
+                (onClick)="trade(ticker, 'SELL')"
+              ></p-button>
+            </div>
+          </div>
+        </p-card>
+      }
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-12">
+      <div class="md:col-span-4">
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="px-2 py-2 text-sm font-semibold">Profile</div>
+          </ng-template>
+
+          <div class="flex flex-col items-center gap-3 py-2">
+            <div
+              class="h-20 w-20 rounded-full bg-slate-200"
+              aria-hidden="true"
+            ></div>
+            <div class="text-lg font-semibold">
+              {{ user()?.name ?? '—' }}
+            </div>
+          </div>
+
+          <div class="mt-4 space-y-3 text-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-600">Available Balance</span>
+              <span class="font-semibold">${{ user()?.balance ?? 0 }}</span>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-slate-600">Portfolio Value</span>
+              <span
+                class="font-semibold"
+                [class.text-green-600]="portfolioValue() >= 10000"
+                [class.text-red-600]="portfolioValue() < 10000"
+              >
+                ${{ portfolioValue() }}
+              </span>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <div class="md:col-span-8">
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="px-2 py-2 text-sm font-semibold">Portfolio</div>
+          </ng-template>
+
+          <p-table
+            [value]="user()?.holdings ?? []"
+            [paginator]="false"
+            [rows]="10"
+            responsiveLayout="scroll"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th scope="col" style="width: 60px">#</th>
+                <th scope="col">Stock</th>
+                <th scope="col" style="width: 140px">Quantity</th>
+                <th scope="col" style="width: 180px">Current Value</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-holding let-rowIndex="rowIndex">
+              <tr>
+                <td>{{ rowIndex + 1 }}</td>
+                <td class="font-semibold">{{ holding.ticker }}</td>
+                <td>{{ holding.quantity }}</td>
+                <td>
+                  ${{ holding.quantity * (stockPrices()[holding.ticker] ?? 0) }}
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
+
+import { TradingPageComponent } from './trading-page/trading-page.component';
 
 @Component({
-  imports: [NxWelcome, RouterModule],
+  imports: [TradingPageComponent],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.css',
