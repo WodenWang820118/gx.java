@@ -17,6 +17,7 @@
 		<module>modules/proto-common</module>
 		<module>modules/user-service</module>
 		<module>modules/aggregator-service</module>
+		<module>modules/stock-service</module>
 	</modules>
 	
 	<dependencies>

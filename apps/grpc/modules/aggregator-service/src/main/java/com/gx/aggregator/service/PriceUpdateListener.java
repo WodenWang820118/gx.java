@@ -1,8 +1,7 @@
 package com.gx.aggregator.service;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +17,7 @@ import io.grpc.stub.StreamObserver;
 public class PriceUpdateListener implements StreamObserver<PriceUpdate> {
 
     private static final Logger logger = Logger.getLogger(PriceUpdateListener.class.getName());
-    private final Set<SseEmitter> emitters = Collections.synchronizedSet(new HashSet<>());
+    private final Set<SseEmitter> emitters = ConcurrentHashMap.newKeySet();
     private final StockPriceCache priceCache;
 
     @Value("${sse.timeout:300000}")
@@ -31,7 +30,7 @@ public class PriceUpdateListener implements StreamObserver<PriceUpdate> {
     public SseEmitter createEmitter() {
         var emitter = new SseEmitter(this.sseTimeout);
         this.emitters.add(emitter);
-        // emitter.onCompletion(() -> this.emitters.remove(emitter));
+        emitter.onCompletion(() -> this.emitters.remove(emitter));
         emitter.onTimeout(() -> this.emitters.remove(emitter));
         emitter.onError(e -> this.emitters.remove(emitter));
         return emitter;
@@ -51,7 +50,13 @@ public class PriceUpdateListener implements StreamObserver<PriceUpdate> {
     @Override
     public void onError(Throwable t) {
         logger.severe("streaming error: " + t.getMessage());
-        this.emitters.forEach(e -> e.completeWithError(t));
+        for (var emitter : this.emitters) {
+            try {
+                emitter.completeWithError(t);
+            } catch (Exception ignored) {
+                // Best-effort cleanup
+            }
+        }
         this.emitters.clear();
     }
 

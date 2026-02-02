@@ -1,55 +1,118 @@
 package com.gx.aggregator.service;
 
-import java.util.concurrent.ScheduledExecutorService;
+import java.time.Duration;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
-import com.gx.aggregator.controller.dto.PriceUpdateDto;
 import com.gx.stock.StockServiceGrpc;
 import com.google.protobuf.Empty;
 
-import lombok.RequiredArgsConstructor;
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
+import jakarta.annotation.PreDestroy;
 
 @Service
-@RequiredArgsConstructor
 public class PriceUpdateSubscriptionInitializer implements CommandLineRunner {
     private static final Logger logger = Logger.getLogger(PriceUpdateSubscriptionInitializer.class.getName());
     private final PriceUpdateListener priceUpdateListener;
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+    private final StockServiceGrpc.StockServiceStub stockServiceStub;
+
+    private final AtomicBoolean started = new AtomicBoolean(false);
+    private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
+
+    private final ScheduledExecutorService scheduler;
+
+    public PriceUpdateSubscriptionInitializer(PriceUpdateListener priceUpdateListener,
+            StockServiceGrpc.StockServiceStub stockServiceStub) {
+        this.priceUpdateListener = priceUpdateListener;
+        this.stockServiceStub = stockServiceStub;
+
+        ThreadFactory tf = runnable -> {
+            Thread t = new Thread(runnable);
+            t.setName("stock-stream-subscriber");
+            t.setDaemon(true);
+            return t;
+        };
+        this.scheduler = Executors.newSingleThreadScheduledExecutor(tf);
+    }
 
     @Override
     public void run(String... args) throws Exception {
-        // Start mock price updates since stock-service doesn't exist yet
-        startMockPriceUpdates();
+        // Subscribe once at startup; errors trigger backoff retry.
+        startSubscription();
     }
 
-    private void startMockPriceUpdates() {
-        String[] tickers = { "APPLE", "AMAZON", "GOOGLE", "MICROSOFT" };
-        int[] prices = { 150, 160, 140, 180 };
+    @PreDestroy
+    void stop() {
+        this.scheduler.shutdownNow();
+    }
 
-        executorService.scheduleAtFixedRate(() -> {
-            for (int i = 0; i < tickers.length; i++) {
-                // Simulate price fluctuation (±5%)
-                int change = (int) ((Math.random() - 0.5) * 10);
-                prices[i] = Math.max(100, prices[i] + change);
+    private void startSubscription() {
+        if (!this.started.compareAndSet(false, true)) {
+            return;
+        }
 
-                PriceUpdateDto dto = PriceUpdateDto.builder()
-                        .ticker(tickers[i])
-                        .price(prices[i])
-                        .build();
+        subscribeNow();
+    }
 
-                try {
-                    priceUpdateListener.sendPriceUpdate(dto);
-                } catch (Exception e) {
-                    logger.warning("Failed to send price update: " + e.getMessage());
-                }
+    private void subscribeNow() {
+        logger.info("Subscribing to stock-service price updates (gRPC stream)");
+        this.stockServiceStub.getPriceUpdates(Empty.getDefaultInstance(), new StreamObserver<>() {
+            @Override
+            public void onNext(com.gx.stock.PriceUpdate value) {
+                consecutiveFailures.set(0);
+                priceUpdateListener.onNext(value);
             }
-        }, 0, 2, TimeUnit.SECONDS);
 
-        logger.info("Mock price updates started");
+            @Override
+            public void onError(Throwable t) {
+                // Keep SSE clients connected; just retry the upstream gRPC stream.
+                scheduleRetry(t);
+            }
+
+            @Override
+            public void onCompleted() {
+                // Treat completion like a recoverable disconnect.
+                scheduleRetry(null);
+            }
+        });
+    }
+
+    private void scheduleRetry(Throwable t) {
+        int failures = consecutiveFailures.incrementAndGet();
+        Duration delay = backoffDelay(failures, t);
+
+        String reason = (t == null) ? "stream completed" : (t.getClass().getSimpleName() + ": " + t.getMessage());
+        logger.warning("Price update stream ended (" + reason + "). Retrying in " + delay.toMillis() + "ms");
+
+        this.scheduler.schedule(this::subscribeNow, delay.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    private Duration backoffDelay(int failures, Throwable t) {
+        // Quick retry for transient gRPC statuses; otherwise exponential backoff capped
+        // at 30s.
+        long baseMs = 500;
+        long maxMs = 30_000;
+
+        if (t != null) {
+            Status status = Status.fromThrowable(t);
+            switch (status.getCode()) {
+                case UNAVAILABLE, DEADLINE_EXCEEDED, RESOURCE_EXHAUSTED -> baseMs = 500;
+                default -> baseMs = 1_000;
+            }
+        }
+
+        long exp = Math.min(maxMs, baseMs * (1L << Math.min(10, failures - 1)));
+        // Add a tiny jitter to avoid thundering herd.
+        long jitter = (long) (Math.random() * 250);
+        return Duration.ofMillis(Math.min(maxMs, exp + jitter));
     }
 }

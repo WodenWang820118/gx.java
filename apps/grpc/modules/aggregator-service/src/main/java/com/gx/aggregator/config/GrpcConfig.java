@@ -14,6 +14,7 @@ import io.grpc.stub.MetadataUtils;
 import org.springframework.http.converter.protobuf.ProtobufJsonFormatHttpMessageConverter;
 
 import com.google.protobuf.util.JsonFormat;
+import com.gx.stock.StockServiceGrpc;
 import com.gx.user.UserServiceGrpc;
 
 /**
@@ -123,5 +124,15 @@ public class GrpcConfig {
     @Bean
     public UserServiceGrpc.UserServiceBlockingStub userServiceBlockingStub(GrpcChannelFactory channelFactory) {
         return UserServiceGrpc.newBlockingStub(channelFactory.createChannel("user-service"));
+    }
+
+    /**
+     * Create StockService async stub bean.
+     * The authority "stock-service" must match the property prefix in
+     * application.properties
+     */
+    @Bean
+    public StockServiceGrpc.StockServiceStub stockServiceStub(GrpcChannelFactory channelFactory) {
+        return StockServiceGrpc.newStub(channelFactory.createChannel("stock-service"));
     }
 }
