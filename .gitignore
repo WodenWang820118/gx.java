@@ -53,3 +53,6 @@ apps/spring-backend/target/
 dependency-reduced-pom.xml
 release.properties
 buildNumber.properties
+.angular
+
+__screenshots__/
