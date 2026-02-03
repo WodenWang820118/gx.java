@@ -28,12 +28,18 @@ export interface PortfolioHolding {
  * Retrieved from the user service via gRPC.
  */
 export interface UserInformation {
+  /** Trading system user ID */
+  userId?: number;
   /** User's display name */
   name: string;
   /** Current account balance in dollars */
   balance: number;
   /** List of stocks currently held in the portfolio */
   holdings: PortfolioHolding[];
+  /** Employee ID linking to organizational data */
+  employeeId?: number;
+  /** Department ID linking to organizational data */
+  departmentId?: number;
 }
 
 /** Type of trading action that can be performed */

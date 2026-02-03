@@ -16,4 +16,6 @@ public class User {
     private Integer id;
     private String name;
     private Integer balance;
+    private Integer employeeId;
+    private Integer departmentId;
 }

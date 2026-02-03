@@ -56,6 +56,7 @@ export class TradingApiService {
       ),
     ).pipe(
       map((user) => ({
+        userId: user.userId,
         name: user.name,
         balance: user.balance,
         holdings: user.holdings.map((h: Holding) => ({

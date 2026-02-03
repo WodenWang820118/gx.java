@@ -5,7 +5,9 @@ DROP TABLE IF EXISTS portfolio_item;
 CREATE TABLE customer (
     id int AUTO_INCREMENT primary key,
     name VARCHAR(50),
-    balance int
+    balance int,
+    employee_id int,
+    department_id int
 );
 
 CREATE TABLE portfolio_item (
@@ -16,11 +18,11 @@ CREATE TABLE portfolio_item (
     foreign key (customer_id) references customer(id)
 );
 
-insert into customer(name, balance)
+insert into customer(name, balance, employee_id, department_id)
     values
-        ('Sam', 10000),
-        ('Mike', 10000),
-        ('John', 10000);
+        ('Sam', 10000, 1, 1),
+        ('Mike', 10000, 2, 2),
+        ('John', 10000, 3, 1);
 
 insert into portfolio_item(customer_id, ticker, quantity)
     values

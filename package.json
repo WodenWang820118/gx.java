@@ -18,7 +18,9 @@
     "grpc-angular:serve": "nx run grpc-angular:serve",
     "grpc-angular:serve-static": "nx run grpc-angular:serve-static",
     "grpc-angular:build": "nx run grpc-angular:build",
-    "grpc-angular:test": "nx run grpc-angular:test"
+    "grpc-angular:test": "nx run grpc-angular:test",
+    "trading:serve:all": "concurrently \"npm:grpc:serve:all\" \"npm:springbootup:serve\" \"npm:grpc-angular:serve\" --names \"GRPC,ORG,UI\" --prefix-colors \"blue,green,yellow\"",
+    "trading:serve:backend": "concurrently \"npm:grpc:serve:all\" \"npm:springbootup:serve\" --names \"GRPC,ORG\" --prefix-colors \"blue,green\""
   },
   "private": true,
   "devDependencies": {
