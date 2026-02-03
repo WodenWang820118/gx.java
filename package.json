@@ -7,7 +7,7 @@
     "grpc:serve:aggregator": "nx run grpc:serve:aggregator",
     "grpc:serve:stock": "nx run grpc:serve:stock",
     "grpc:serve:envoy": "nx run grpc:envoy:up",
-    "grpc:serve:all": "nx run grpc:serve:all",
+    "grpc:serve:all": "concurrently \"pnpm:grpc:serve:all\" \"pnpm:springbootup:serve\" \"pnpm:grpc-angular:serve\" --names \"GRPC,ORG,UI\" --prefix-colors \"blue,green,yellow\"",
     "grpc:build": "cross-env \"nx run grpc:clean && nx run grpc:build\"",
     "grpc:test": "nx run grpc:test",
     "grpc:clean": "nx run grpc:clean",
@@ -15,12 +15,11 @@
     "springbootup:build": "cross-env \"nx run springbootup:clean && nx run springbootup:build\"",
     "springbootup:test": "nx run springbootup:test",
     "springbootup:clean": "nx run springbootup:clean",
+    "trading:serve:backend": "concurrently \"pnpm:grpc:serve:all\" \"pnpm:springbootup:serve\" --names \"GRPC,ORG\" --prefix-colors \"blue,green\"",
     "grpc-angular:serve": "nx run grpc-angular:serve",
     "grpc-angular:serve-static": "nx run grpc-angular:serve-static",
     "grpc-angular:build": "nx run grpc-angular:build",
-    "grpc-angular:test": "nx run grpc-angular:test",
-    "trading:serve:all": "concurrently \"npm:grpc:serve:all\" \"npm:springbootup:serve\" \"npm:grpc-angular:serve\" --names \"GRPC,ORG,UI\" --prefix-colors \"blue,green,yellow\"",
-    "trading:serve:backend": "concurrently \"npm:grpc:serve:all\" \"npm:springbootup:serve\" --names \"GRPC,ORG\" --prefix-colors \"blue,green\""
+    "grpc-angular:test": "nx run grpc-angular:test"
   },
   "private": true,
   "devDependencies": {
@@ -48,6 +47,7 @@
     "@swc/helpers": "~0.5.11",
     "@typescript-eslint/utils": "^8.40.0",
     "angular-eslint": "^21.0.1",
+    "concurrently": "^9.2.1",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-playwright": "^1.6.2",
